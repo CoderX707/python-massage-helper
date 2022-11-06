@@ -1,3 +1,4 @@
+import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -23,27 +24,47 @@ class EmailHelper:
     def __createServerAndSendEmail(self, recipient, message):
         server = smtplib.SMTP_SSL(self.server_name, self.server_port)
         server.login(self.server_user_email, self.server_user_password)
-        server.sendmail(self.server_user_email, [recipient], message.as_string())
+        recipients = recipient.split(',')
+        server.sendmail(self.server_user_email, recipients, message.as_string())
         server.quit()
 
+    def pathToFilesList(self,path):
+        list = os.listdir(path)
+        return list
+    
+    def __getFormat(self,emailObject):
+        return emailObject["format"] if "format" in emailObject else "plain"
+
+    def __isBcc(self,emailObject):
+        toList = emailObject["to"].split(',')
+        return True if len(toList)>1 else False
+
+
     def sendTextEmail(self, emailObject):
-        format = emailObject["format"] if "format" in emailObject else "plain"
+        format = self.__getFormat(emailObject)
         msg = MIMEText(emailObject["body"], format, "utf-8")
         msg["Subject"] = Header(emailObject["subject"], "utf-8")
         msg["From"] = formataddr(
             (str(Header(self.sender_name, "utf-8")), self.server_user_email)
         )
-        msg["To"] = emailObject["to"]
+        if self.__isBcc(emailObject):
+            msg["Bcc"] = emailObject["to"]
+        else:
+            msg["To"] = emailObject["to"]
+        if "cc" in emailObject:
+            msg["Cc"] = emailObject["cc"]
         self.__createServerAndSendEmail(emailObject["to"], msg)
 
     def sendEmailWithSingleAttachmentFile(self, emailObject):
-        format = emailObject["format"] if "format" in emailObject else "plain"
+        format = self.__getFormat(emailObject)
         msg = MIMEMultipart()
         msg["Subject"] = Header(emailObject["subject"], "utf-8")
         msg["From"] = formataddr(
             (str(Header(self.sender_name, "utf-8")), self.server_user_email)
         )
         msg["To"] = emailObject["to"]
+        if "cc" in emailObject:
+            msg["Cc"] = emailObject["cc"]
         msg.attach(MIMEText(emailObject["body"], format, "utf-8"))
         attachment = open(emailObject["filePath"], "rb")
         p = MIMEBase("application", "octet-stream")

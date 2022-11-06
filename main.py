@@ -13,6 +13,7 @@ emailHelper = EmailHelper(config)
 # send text email. object and function
 emailObj = {
     "to": "To email address",
+    "cc": "cc email address",  # optional
     "subject": "email subject",
     "body": "<h1>email body</h1>",
     "format": "html",  # optional, You can use (plain or html) format. default is plain
@@ -22,6 +23,7 @@ emailHelper.sendTextEmail(emailObj)
 # send email with single attachment. object and function
 emailObjWithAttachment = {
     "to": "To email address",
+    "cc": "cc email address",  # optional
     "subject": "email subject",
     "body": "<h1>email body</h1>",
     "fileName": "File name", # Ex.: Attachment.zip
